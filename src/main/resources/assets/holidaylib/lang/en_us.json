@@ -1,0 +1,7 @@
+{
+
+  "text.autoconfig.holidaylib.option.disableShaders": "Mac Mode/Shaderless Mode",
+  "text.autoconfig.holidaylib.option.disableShaders.@Tooltip": "Disables Veil shaders. Should fix systems without veil shader support, or M-Series macbooks.",
+  "text.autoconfig.holidaylib.option.disableAllCustomPlayerRendering": "Disable All Custom Player Rendering",
+  "text.autoconfig.holidaylib.option.disableAllCustomPlayerRendering.@Tooltip": "Disables all custom player render layers/skin tinting."
+}

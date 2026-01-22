@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "holidaylib",
+  "version": "${version}",
+  "name": "HolidayLib",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "LGPL-3.0",
+  "icon": "assets/holidaylib/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-datagen": [
+      "org.agmas.holidaylib.client.HolidaylibDataGenerator"
+    ],
+    "client": [
+      "org.agmas.holidaylib.client.HolidaylibClient"
+    ],
+    "main": [
+      "org.agmas.holidaylib.Holidaylib"
+    ],
+    "modmenu": [
+      "org.agmas.holidaylib.client.config.HolidayModMenuIntergration"
+    ]
+  },
+  "mixins": [
+    "holidaylib.mixins.json",
+    {
+      "config": "holidaylib.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
