@@ -5,7 +5,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.systems.RenderSystem;
-import foundry.veil.api.client.render.VeilRenderSystem;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.PlayerSkinDrawer;
@@ -18,6 +17,7 @@ import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Identifier;
+import org.agmas.holidaylib.Holidaylib;
 import org.agmas.holidaylib.client.events.ModifyPlayerRenderLayer;
 import org.agmas.holidaylib.client.events.ModifyPlayerSkinTint;
 import org.joml.Matrix4f;
@@ -45,24 +45,8 @@ public class HolidaySkinPlayerDrawerMixin {
 
             float u1h = 0.625f;
             float u2h = 0.75f;
-            if (FabricLoader.getInstance().isModLoaded("veil")) {
-                if (entry != null) {
-                    if (entry.shaderIdentifier != null) {
 
-                        if (skinTint == null) skinTint = new Color(-1);
-                        RenderSystem.setShaderTexture(0, texture);
-                        VeilRenderSystem.setShader(entry.shaderIdentifier);
-                        BufferBuilder bufferBuilder = bufferSection(context, x, y, u1, u2, u1, u2, skinTint.getRGB());
-                        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
-                        bufferBuilder = bufferSection(context, x, y, u1h, u2h, u1, u2, skinTint.getRGB());
-                        RenderSystem.enableBlend();
-                        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
-                        RenderSystem.disableBlend();
-                        return;
-                    }
-                }
-            }
-            if (skinTint != null) {
+            if (entry == null && skinTint != null) {
 
                 RenderSystem.setShaderTexture(0, texture);
                 RenderSystem.setShader(GameRenderer::getPositionTexProgram);
@@ -72,6 +56,24 @@ public class HolidaySkinPlayerDrawerMixin {
                 RenderSystem.enableBlend();
                 BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
                 RenderSystem.disableBlend();
+                return;
+            }
+            if (Holidaylib.VEIL_LOADED) {
+                if (entry != null) {
+                    if (entry.shaderIdentifier != null) {
+
+                        if (skinTint == null) skinTint = new Color(-1);
+                        RenderSystem.setShaderTexture(0, texture);
+                        foundry.veil.api.client.render.VeilRenderSystem.setShader(entry.shaderIdentifier);
+                        BufferBuilder bufferBuilder = bufferSection(context, x, y, u1, u2, u1, u2, skinTint.getRGB());
+                        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+                        bufferBuilder = bufferSection(context, x, y, u1h, u2h, u1, u2, skinTint.getRGB());
+                        RenderSystem.enableBlend();
+                        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+                        RenderSystem.disableBlend();
+                        return;
+                    }
+                }
             }
         }
         original.call(context,texture,x,y,size,hatVisible,upsideDown);

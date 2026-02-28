@@ -11,6 +11,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import org.agmas.holidaylib.client.events.ModifyPlayerOuterRenderLayer;
 import org.agmas.holidaylib.client.events.ModifyPlayerRenderLayer;
 import org.agmas.holidaylib.client.events.ModifyPlayerSkinTint;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,21 +25,25 @@ import java.awt.*;
 @Mixin(LivingEntityRenderer.class)
 public abstract class HolidaySkinMixin {
 
-    @ModifyArg(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/LivingEntityRenderer;getRenderLayer(Lnet/minecraft/entity/LivingEntity;ZZZ)Lnet/minecraft/client/render/RenderLayer;"), index = 2)
-    public boolean translucentMixin(boolean translucent, @Local(argsOnly = true) LivingEntity livingEntity) {
-        if (!(livingEntity instanceof PlayerEntity)) return translucent;
-        if (ModifyPlayerRenderLayer.EVENT.invoker().modify(livingEntity,((LivingEntityRenderer)(Object)this).getTexture(livingEntity)) != null) {
-            return true;
-        }
-        return translucent;
-    }
     @Inject(method = "getRenderLayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/LivingEntityRenderer;getTexture(Lnet/minecraft/entity/Entity;)Lnet/minecraft/util/Identifier;", shift = At.Shift.AFTER), cancellable = true)
     public void a(LivingEntity entity, boolean showBody, boolean translucent, boolean showOutline, CallbackInfoReturnable<RenderLayer> cir) {
         if (!(entity instanceof PlayerEntity)) return;
+        int translucentPriority = -10000;
+        if (translucent) {
+            ModifyPlayerOuterRenderLayer.Entry entry = ModifyPlayerOuterRenderLayer.EVENT.invoker().modify(entity, ((LivingEntityRenderer) (Object) this).getTexture(entity));
+            if (entry != null) {
+                RenderLayer layer = entry.layer;
+                if (layer != null) {
+                    cir.setReturnValue(layer);
+                    cir.cancel();
+                    translucentPriority = entry.priority;
+                }
+            }
+        }
         ModifyPlayerRenderLayer.Entry entry = ModifyPlayerRenderLayer.EVENT.invoker().modify(entity, ((LivingEntityRenderer)(Object)this).getTexture(entity));
         if (entry != null) {
             RenderLayer layer = entry.layer;
-            if (layer != null) {
+            if (layer != null && translucentPriority > entry.priority) {
                 cir.setReturnValue(layer);
                 cir.cancel();
             }
