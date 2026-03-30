@@ -28,6 +28,7 @@ public abstract class HolidaySkinMixin {
     @Inject(method = "getRenderLayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/LivingEntityRenderer;getTexture(Lnet/minecraft/entity/Entity;)Lnet/minecraft/util/Identifier;", shift = At.Shift.AFTER), cancellable = true)
     public void a(LivingEntity entity, boolean showBody, boolean translucent, boolean showOutline, CallbackInfoReturnable<RenderLayer> cir) {
         if (!(entity instanceof PlayerEntity)) return;
+        boolean die = false;
         int translucentPriority = -10000;
         if (translucent) {
             ModifyPlayerOuterRenderLayer.Entry entry = ModifyPlayerOuterRenderLayer.EVENT.invoker().modify(entity, ((LivingEntityRenderer) (Object) this).getTexture(entity));
@@ -35,24 +36,26 @@ public abstract class HolidaySkinMixin {
                 RenderLayer layer = entry.layer;
                 if (layer != null) {
                     cir.setReturnValue(layer);
-                    cir.cancel();
                     translucentPriority = entry.priority;
+                    die = true;
                 }
             }
         }
         ModifyPlayerRenderLayer.Entry entry = ModifyPlayerRenderLayer.EVENT.invoker().modify(entity, ((LivingEntityRenderer)(Object)this).getTexture(entity));
         if (entry != null) {
             RenderLayer layer = entry.layer;
-            if (layer != null && translucentPriority > entry.priority) {
+            if (layer != null && entry.priority > translucentPriority) {
                 cir.setReturnValue(layer);
-                cir.cancel();
+                die = true;
             }
         }
+        if (die)
+            cir.cancel();
     }
     @ModifyArg(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/LivingEntityRenderer;getRenderLayer(Lnet/minecraft/entity/LivingEntity;ZZZ)Lnet/minecraft/client/render/RenderLayer;"), index = 3)
     public boolean outlineMixin(boolean outline, @Local(argsOnly = true) LivingEntity livingEntity) {
         if (!(livingEntity instanceof PlayerEntity)) return outline;
-        if (ModifyPlayerRenderLayer.EVENT.invoker().modify(livingEntity, ((LivingEntityRenderer)(Object)this).getTexture(livingEntity)) != null) {
+        if (ModifyPlayerRenderLayer.EVENT.invoker().modify(livingEntity, ((LivingEntityRenderer)(Object)this).getTexture(livingEntity)) != null || ModifyPlayerOuterRenderLayer.EVENT.invoker().modify(livingEntity, ((LivingEntityRenderer)(Object)this).getTexture(livingEntity)) != null) {
             return true;
         }
         return outline;

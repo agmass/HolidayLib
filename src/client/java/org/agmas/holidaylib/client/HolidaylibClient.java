@@ -3,6 +3,7 @@ package org.agmas.holidaylib.client;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.serializer.JanksonConfigSerializer;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderPhase;
@@ -53,18 +54,25 @@ public class HolidaylibClient implements ClientModInitializer {
 
     public static RenderLayer shaderFallbackLayer(RenderLayer original, RenderLayer fallback) {
         HolidayConfig config = AutoConfig.getConfigHolder(HolidayConfig.class).getConfig();
-        if (config.disableShaders || IrisApi.getInstance().isShaderPackInUse()) return fallback;
+        if (config.disableShaders || usingIris()) return fallback;
         return original;
     }
 
     public static boolean canUseShaders() {
         HolidayConfig config = AutoConfig.getConfigHolder(HolidayConfig.class).getConfig();
-        return !config.disableShaders && !IrisApi.getInstance().isShaderPackInUse();
+        return !config.disableShaders && !usingIris();
     }
     public static Color shaderFallbackColor(Color original, Color fallback) {
         HolidayConfig config = AutoConfig.getConfigHolder(HolidayConfig.class).getConfig();
-        if (config.disableShaders || IrisApi.getInstance().isShaderPackInUse()) return fallback;
+        if (config.disableShaders || usingIris()) return fallback;
         return original;
+    }
+
+    public static boolean usingIris() {
+        if (FabricLoader.getInstance().isModLoaded("iris")) {
+            return IrisApi.getInstance().isShaderPackInUse();
+        }
+        return false;
     }
 
 
